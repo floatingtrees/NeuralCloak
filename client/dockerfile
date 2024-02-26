@@ -1,0 +1,26 @@
+# Use an official Node runtime as a parent image
+FROM node:18
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy package.json AND package-lock.json
+COPY package*.json ./
+
+# Install app dependencies
+RUN npm install
+
+# Bundle app source
+COPY . .
+
+# Build the app
+RUN npm run build
+
+# Install serve to serve the build folder
+RUN npm install -g serve
+
+# Make port 3000 available to the world outside this container
+EXPOSE 3000
+
+# Run serve when the container launches
+CMD ["npm", "start"]

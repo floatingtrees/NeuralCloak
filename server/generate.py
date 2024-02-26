@@ -1,0 +1,127 @@
+import torch
+from PIL import Image
+import attack
+import clip
+from torchvision import transforms
+import torchvision
+import numpy as np
+from multiprocessing import Process, Queue, shared_memory
+from io import BytesIO
+import base64
+
+
+
+def encode_text(model, negative_text_list, positive_text_list, device):
+    negative_text_inputs = torch.cat([clip.tokenize(text) for text in negative_text_list])
+    positive_text_inputs = torch.cat([clip.tokenize(text) for text in positive_text_list])
+
+    # optimize the image away from negative
+    negative_text_features = model.encode_text(negative_text_inputs.to(device))
+    negative_text_features = negative_text_features / negative_text_features.norm(dim=-1, keepdim=True)
+
+
+    # optimize the image towards positive
+    positive_text_features = model.encode_text(positive_text_inputs.to(device))
+    positive_text_features = positive_text_features / positive_text_features.norm(dim=-1, keepdim=True)
+
+     # Clone and detach tensors to use as base of graph so the model operations aren't tracked
+    return negative_text_features.clone().detach(), positive_text_features.clone().detach()
+
+def convertToImage(tensor):
+    image = tensor[0, :, :, :].detach().numpy()
+    image = np.transpose(image, (1, 2, 0))
+    return Image.fromarray((image * 255).astype(np.uint8))
+
+
+
+def parallelized_generate(image, negative_text_list, positive_text_list, shm_name, tasks):
+    if torch.backends.mps.is_available():
+        device = "mps"
+    elif torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
+    to_tensor = transforms.Compose([transforms.ToTensor()])
+    all_models = {}
+
+    #ViT
+    model_name = 'ViT-B32'
+    model = torch.load(f"models/{model_name}.pt")
+    model.eval().to(device)
+    ViT_B32 = transforms.Compose([
+            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
+            transforms.CenterCrop(224), 
+            transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
+    negative, positive = encode_text(model, negative_text_list, positive_text_list, device)
+    model_stats = {"model_name" : model_name, "model" : model, 
+                "transform" : ViT_B32, "positive" : positive, "negative" : negative}
+    all_models[model_name] = model_stats 
+
+    #Resnet 50
+    
+    model_name = 'RN50'
+    model = torch.load(f"models/{model_name}.pt")
+    model.eval().to(device)
+    RN50 = transforms.Compose([
+            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
+            transforms.CenterCrop(224), 
+            transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
+    negative, positive = encode_text(model, negative_text_list, positive_text_list, device)
+
+    model_stats = {"model_name" : model_name, "model" : model, 
+                "transform" : RN50, "positive" : positive, "negative" : negative} 
+    all_models[model_name] = model_stats
+
+    
+
+    # write to shared memory
+    image = to_tensor(image).unsqueeze(0)
+    image_input = image.clone().detach().to(device)
+    image_output, _ = attack.parallel_attack(all_models, image, negative_text_list, positive_text_list, shm_name, tasks, device)
+    converted_image = convertToImage(image_output)
+
+
+    shm = shared_memory.SharedMemory(name=shm_name)
+    img_array = np.array(converted_image)
+    shm_array = np.ndarray(img_array.shape, dtype=img_array.dtype, buffer=shm.buf)
+    np.copyto(shm_array, img_array)
+    tasks[shm_name] = img_array.shape
+    shm.close()
+    
+
+
+
+if __name__ == '__main__':
+    src_img = Image.open("shark-demo2.jpg")
+    negative_text_list = ["great white shark", "shark in the ocean", "marine life"]
+    positive_text_list = ["potato"]
+    queue = Queue()
+    shm = shared_memory.SharedMemory(create = True, size = 100000000)
+    p = Process(target = parallelized_generate, args = (src_img, negative_text_list, positive_text_list, queue, shm.name))
+    p.start()
+    p.join()
+    list_queue = []
+    last_item = 0
+    while not queue.empty():
+        last_item = queue.get()
+        list_queue.append(last_item)
+    print(len(list_queue))
+
+    
+    if type(last_item) is int:
+        pass
+    else:
+        #shm = shared_memory.SharedMemory(name=shm_name) 
+        shape = last_item
+        buffer = BytesIO()
+            
+            
+        buffer.seek(0)
+
+        shm_array = np.ndarray(shape, dtype=np.uint8, buffer=shm.buf)
+        converted_image = Image.fromarray(shm_array)
+        converted_image.save("temp.png")
+        converted_image.save(buffer, format='PNG')
+        encoded_string = base64.b64encode(buffer.getvalue()).decode()
+    shm.close()
+    shm.unlink()

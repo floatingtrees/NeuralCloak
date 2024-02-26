@@ -1,0 +1,75 @@
+   import {useState } from 'react';
+
+   import ImageUploader from '../components/imageUpload'
+   import TextBoxAdderPositive from '../components/textBoxAdderPositive';
+   import TextBoxAdderNegative from '../components/textBoxAdderNegative';
+   import React from 'react';
+   import Link from 'next/link';
+
+
+
+    
+
+   const HomePage =() => {
+
+     const [message, setMessage] = useState('');
+     const [positiveTextValues, setPositiveTextValues] = useState('');
+     const [negativeTextValues, setNegativeTextValues] = useState('');
+
+
+     const handleClick = async (e) => {
+      const response = await fetch('/api/retrieve-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+    };
+
+    
+
+    return (
+     <div>
+     <title>Neural Cloak</title>
+
+     <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}> 
+
+     <p style={{ fontSize: '30px' }}><b> Neural Cloak: Keep your Artwork out of AI Datasets </b></p> 
+
+     </div>
+     <div  style={{display: 'flex', justifyContent:'center', 
+     marginLeft: '20%', marginRight: '20%'}}>
+     <p style={{textIndent: '70px'}}>
+     Upload your image, fill in the prompts, and click the Protect Art button to protect it. It might take a while, and please don't close your browser while it's loading. After the progress bad reaches 100%, you can download the image to your computer. If you're interested in how this works, take a look
+     <Link href="/AboutUs"> here</Link>.
+     </p> 
+     </div>
+     <div style={{display: 'flex', justifyContent:'center', 
+     marginLeft: '20%', marginRight: '20%', fontSize:'16px'}}>
+     <p> Have any questions, comments, or discovered a bug? Join our 
+     <Link href="https://discord.gg/JZT873vsCn"> Discord</Link> to contact us directly</p>
+     </div>
+
+     <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection: 'column'}}>
+     <p style={{fontSize: '20px'}}>
+     What is your art currently captioned as?
+     </p>
+     <TextBoxAdderNegative onValueChange={setNegativeTextValues}/> 
+     <p style={{fontSize: '20px', marginTop:'5%'}}>
+     What do you want neural networks to see?
+     </p>
+     <TextBoxAdderPositive onValueChange={setPositiveTextValues}/> 
+     
+
+     </div>
+     <div>
+     
+     </div>
+
+
+     <ImageUploader positiveTextValues={positiveTextValues} negativeTextValues={negativeTextValues}/>
+
+
+     </div>
+     );
+  }
+  export default HomePage;
