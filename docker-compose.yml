@@ -1,7 +1,7 @@
 version: '3'
 services:
   fastapi:
-    build: ./neuralCloakBackend  # Ensure this is the correct path to your FastAPI app
+    build: ./server  # Ensure this is the correct path to your FastAPI app
     ports:
       - "8000:8000"  # Expose FastAPI on port 5001
     command: uvicorn server:app --host 0.0.0.0 --port 8000 --reload
@@ -9,7 +9,7 @@ services:
     # The --reload flag is used for development and automatically reloads the server on code changes
 
   nextjs:
-    build: ./neuralCloak  # Ensure this is the correct path to your Next.js app
+    build: ./client  # Ensure this is the correct path to your Next.js app
     ports:
       - "3000:3000"
     environment:
