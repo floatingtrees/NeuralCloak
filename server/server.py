@@ -7,12 +7,14 @@ import generate
 import base64
 import uuid
 import torch
+import clip
 import numpy as np
 from multiprocessing import Process, Queue, shared_memory, Manager
 from io import BytesIO
 import threading
 import inspect
 from pydantic import BaseModel
+import os
 
 import uvicorn
 
@@ -68,7 +70,9 @@ def startup_event():
     global manager, tasks
     manager = Manager()
     tasks = manager.dict()
-
+    tasks['RN50'], _ = clip.load('RN50')
+    tasks['ViT-B/32'], _ = clip.load('ViT-B/32')
+ 
 @app.get('/task_status/{task_id}')
 def get_task_status(task_id):
 
@@ -135,4 +139,4 @@ if __name__ == '__main__':
     
     #manager = Manager()
     #tasks = manager.dict()
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("server:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=False)

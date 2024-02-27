@@ -12,9 +12,8 @@ import timm
 model_name = 'ViT-B/32'
 model, _ = clip.load(model_name)
 model.eval()
-torch.save(model, "models/ViT-B32.pt")
+
 
 model_name = 'RN50'
 model, _ = clip.load(model_name)
 model.eval()
-torch.save(model, "models/RN50.pt")

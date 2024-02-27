@@ -46,7 +46,7 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
 
     #ViT
     model_name = 'ViT-B/32'
-    model, _ = clip.load(model_name)
+    model = tasks[model_name]
     model.eval().to(device)
     ViT_B32 = transforms.Compose([
             torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
@@ -60,7 +60,7 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
     #Resnet 50
     
     model_name = 'RN50'
-    model, _ = clip.load(model_name)
+    model = tasks[model_name]
     model.eval().to(device)
     RN50 = transforms.Compose([
             torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
