@@ -21,5 +21,5 @@ EXPOSE 8080
 # Define environment variable
 ENV NAME World
 
-# Run server.py when the container launches
+# Run main.py when the container launches
 CMD ["python3", "main.py"]

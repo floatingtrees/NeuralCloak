@@ -69,9 +69,12 @@ def release_shared_memory(name):
 def startup_event():
     global manager, tasks
     manager = Manager()
+
     tasks = manager.dict()
-    tasks['RN50'], _ = clip.load('RN50')
-    tasks['ViT-B/32'], _ = clip.load('ViT-B/32')
+    model1, _ = clip.load('ViT-B/32')
+    tasks['ViT-B/32'] = model1
+    model2 , _ = clip.load('RN50')
+    tasks['RN50'] = model2
  
 @app.get('/task_status/{task_id}')
 def get_task_status(task_id):
@@ -138,6 +141,6 @@ async def upload_file(data : UploadRequest):
 if __name__ == '__main__':
     
     #manager = Manager()
-    
+
     #tasks = manager.dict()
-    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), reload = True)
