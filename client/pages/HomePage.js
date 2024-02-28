@@ -39,13 +39,16 @@
      <div  style={{display: 'flex', justifyContent:'center', 
      marginLeft: '20%', marginRight: '20%'}}>
      <p style={{textIndent: '70px'}}>
-     Upload your image, fill in the prompts, and click the Protect Art button to protect it. It might take a while, and please don't close your browser while it's loading. After the progress bar reaches 100%, you can download the image to your computer. If you're interested in how this works, take a look
-     <Link href="/AboutUs"> here</Link>.
+     Upload your image, fill in the prompts, and click the Protect Art button to protect it. 
+     It might take a while, and please don't close your browser while it's loading. 
+     After the progress bar reaches 100%, you can download the image and use it as you please. 
+     If you're interested in how this works, take a look <Link href="/AboutUs"> here</Link>. 
+     Currently, we only support jpg, jpeg, and png formats. 
      </p> 
      </div>
      <div style={{display: 'flex', justifyContent:'center', 
      marginLeft: '20%', marginRight: '20%', fontSize:'16px'}}>
-     <p> Have any questions, comments, or discovered a bug? Join our 
+     <p> Did you find a bug, want new features, or have questions? Join our 
      <Link href="https://discord.gg/JZT873vsCn"> Discord</Link> to contact us directly</p>
      </div>
 

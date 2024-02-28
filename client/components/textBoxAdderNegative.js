@@ -27,7 +27,7 @@ function TextBoxAdderNegative({ onValueChange }) {
         <input
           placeholder="A flower blooming"
           type="text"
-          style={{ width: '30vw' }}
+          style={{ width: '30vw' , borderRadius: '10px' , padding : "20px", fontSize : '20px'}}
           value={input}
           onChange={(event) => handleInputChange(index, event)}
         />

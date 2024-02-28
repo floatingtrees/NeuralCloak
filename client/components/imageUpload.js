@@ -68,7 +68,7 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
     }
     setRequestEpoch(0);
     const imageBase64 = await convertToBase64(selectedImage);
-    
+
 
     try {
       setRequestEpoch(1);
@@ -195,9 +195,9 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
           )}
           
           </div>
-          <div style={{margin: '20px', display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          <div style={{margin: '20px', display: 'flex',  justifyContent:'center', alignItems:'center', padding:'20px'}}>
           
-          <button type='submit' className={buttonTypes.roundColorfulButton}>Protect Art</button>
+          <button type='submit' style={{padding:'20px'}} className={buttonTypes.roundColorfulButton}>Protect Art</button>
           </div>
           
           </form>

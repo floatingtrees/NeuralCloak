@@ -16,11 +16,11 @@ COPY . .
 # Build the app
 RUN npm run build
 
-# Install serve to serve the build folder
-RUN npm install -g serve
 
 # Make port 3000 available to the world outside this container
-EXPOSE 3000
+ARG PORT=3000
+ENV PORT $PORT
+EXPOSE $PORT
 
 # Run serve when the container launches
 CMD ["npm", "start"]

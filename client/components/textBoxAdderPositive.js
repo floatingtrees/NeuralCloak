@@ -27,7 +27,7 @@ function TextBoxAdderPositive({ onValueChange }) {
         <input
           placeholder="An angry potato waving a pitchfork"
           type="text"
-          style={{ width: '30vw' }}
+          style={{ width: '30vw' , borderRadius: '10px' , padding : "20px", fontSize : '20px'}}
           value={input}
           onChange={(event) => handleInputChange(index, event)}
         />

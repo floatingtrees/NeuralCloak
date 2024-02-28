@@ -29,3 +29,5 @@ yarn-error.log*
 *.jpeg
 !uploadImage.jpg
 !uploadImage.png
+!sharkDemo.png
+!sharkDemo2.png
