@@ -39,7 +39,7 @@
      <div  style={{display: 'flex', justifyContent:'center', 
      marginLeft: '20%', marginRight: '20%'}}>
      <p style={{textIndent: '70px'}}>
-     Upload your image, fill in the prompts, and click the Protect Art button to protect it. It might take a while, and please don't close your browser while it's loading. After the progress bad reaches 100%, you can download the image to your computer. If you're interested in how this works, take a look
+     Upload your image, fill in the prompts, and click the Protect Art button to protect it. It might take a while, and please don't close your browser while it's loading. After the progress bar reaches 100%, you can download the image to your computer. If you're interested in how this works, take a look
      <Link href="/AboutUs"> here</Link>.
      </p> 
      </div>

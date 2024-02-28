@@ -4,7 +4,7 @@ services:
     build: ./server  # Ensure this is the correct path to your FastAPI app
     ports:
       - "8000:8000"  # Expose FastAPI on port 5001
-    command: uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
     # Note: Replace 'server:app' with the actual Python module and FastAPI app instance names
     # The --reload flag is used for development and automatically reloads the server on code changes
 
@@ -13,7 +13,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_SERVER_URL=http://fastapi:8000
+      - NEXT_PUBLIC_SERVER_URL=http://fastapi:8080
       # Use NEXT_PUBLIC_ prefix for env vars to expose them to the browser in Next.js
     depends_on:
       - fastapi

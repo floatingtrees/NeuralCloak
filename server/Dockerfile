@@ -16,10 +16,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python3 downloads.py
 
 # Make port 8000 available to the world outside this container
-EXPOSE 8000
+EXPOSE 8080
 
 # Define environment variable
 ENV NAME World
 
 # Run server.py when the container launches
-CMD ["python3", "server.py"]
+CMD ["python3", "main.py"]

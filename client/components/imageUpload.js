@@ -68,7 +68,6 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
     }
     setRequestEpoch(0);
     const imageBase64 = await convertToBase64(selectedImage);
-    console.log("base64 conversion wrong")
     
 
     try {
