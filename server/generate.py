@@ -80,6 +80,14 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
     image = to_tensor(image).unsqueeze(0)
     image_input = image.clone().detach().to(device)
     image_output, _ = attack.parallel_attack(all_models, image, negative_text_list, positive_text_list, shm_name, tasks, device)
+    if image_output == "canceled":
+        try: # we don't know for sure if this side will close the shm before the server code
+            shm = shared_memory.SharedMemory(name=shm_name)
+            shm.close()
+            shm.unlink()
+        except Exception as e:
+            print("Generation", e) 
+        exit()
     converted_image = convertToImage(image_output)
 
 

@@ -65,14 +65,6 @@ def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def parallelized_generate(img, negative_text_list, positive_text_list, result_queue):
-    img = generate.base_generate(img, negative_text_list, positive_text_list, result_queue)
-
-    buffer = BytesIO()
-    img.save(buffer, format='PNG')
-    buffer.seek(0)
-    encoded_string = base64.b64encode(buffer.getvalue()).decode()
-
 def release_shared_memory(name):
     try:
         shm = shared_memory.SharedMemory(name=name)
@@ -82,6 +74,19 @@ def release_shared_memory(name):
     except FileNotFoundError:
         print(f"Shared memory with name {name} already released or not found.")
 
+@app.post('/cancel_task/{task_id}')
+def cancel_task(task_id):
+    tasks[task_id] = "canceled"
+    try:
+        shm = shared_memory.SharedMemory(name=task_id) 
+    except:
+        return {'message' : "Task no longer exists"}
+    try:
+        shm.close()
+        shm.unlink()
+    except Exception as e:
+        print(e)
+    return {'message' : "Request successfully canceled"}
 
  
 @app.get('/task_status/{task_id}')
@@ -107,6 +112,7 @@ def get_task_status(task_id):
         encoded_string = base64.b64encode(buffer.getvalue()).decode()
         shm.close()
         shm.unlink()
+        torch.cuda.empty_cache()
         return {"message" : "Finished", "iteration" : -1, "image" : encoded_string}
 
 

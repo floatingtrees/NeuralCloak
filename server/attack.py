@@ -18,7 +18,7 @@ def parallel_attack(all_models, image, negative_text_list, positive_text_list, s
     # If not cloned, loss must retain graph to 
     samples_per_batch = len(negative_text_list) + len(positive_text_list)
     total_samples = len(all_models) * samples_per_batch
-    for i in range(max_epochs):
+    for i in range(1, max_epochs + 1):
         optimizer.zero_grad()
         print(f"EPOCH{i}")
         output_array = torch.zeros((total_samples, 1))
@@ -45,6 +45,8 @@ def parallel_attack(all_models, image, negative_text_list, positive_text_list, s
             break
         x.backward() # 
         optimizer.step()
+        if tasks[shm_name] == "canceled":
+            return ("canceled", None)
         tasks[shm_name] = i
         print(f"EPOCH{i}b")
     
@@ -60,7 +62,6 @@ def parallel_attack(all_models, image, negative_text_list, positive_text_list, s
                 probs +=  output_array[j]
             
         total_probs[text] = probs/gap
-    print("DONE")
 
 
     return image_input, total_probs

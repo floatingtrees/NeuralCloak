@@ -59,7 +59,8 @@ const AboutUs =() => {
     <p style={{textIndent: '70px', marginLeft: "5%", marginRight: "5%"}}>  <b>Is it possible for web scrapers to uncloak images?</b></p>
     <p style={{marginLeft: "5%", marginRight: "5%"}}>  Not without destroying their wallet or dataset. Adding random noise to their dataset usually doesn't work, so if they want to uncloak your art, they have to heavily blur the image. And since there's no good way for AI to determine if an image is cloaked, web scrapers would have to blur their their entire dataset, and at that point, uncloaking your art becomes more trouble than it's worth. </p>
     <p style={{textIndent: '70px', marginLeft: "5%", marginRight: "5%", marginTop:'50px'}}> <b> Does NeuralCloak work against all models?</b></p>
-    <p style={{marginLeft: "5%", marginRight: "5%"}}> We are currently protecting artists from the most popular web scraping AIs, predominantly OpenAI's CLIP models. We are planning to add protection from more models. However, AI is constantly evolving, and we can't guarantee protection from any future or less popular models. </p>
+    <p style={{marginLeft: "5%", marginRight: "5%"}}> We are currently focused on protecting artists from the most popular models used in web scraping, predominantly OpenAI's CLIP models. We are planning to add protection from more models. However, AI is constantly evolving, and we can't guarantee protection from any future or less popular models. </p>
+
     </div>
     
     

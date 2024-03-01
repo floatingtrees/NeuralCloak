@@ -1,7 +1,7 @@
 import { useState, useRef} from 'react';
 import TextInput from './text_box';
 import ProgressBar from './ProgressBar';
-import buttonTypes from './roundColorfulButton.module.css';
+import buttonTypes from './buttons.module.css';
 
 
 
@@ -15,7 +15,6 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
   const [fileName, setFileName] = useState('');
   const [requestEpoch, setRequestEpoch] = useState(-1);
   const [processingRequest, setProcessingRequest] = useState(false);
-  const [cancelRequest, setCancelRequest] = useState(false);
   const serverURL = process.env.NEXT_PUBLIC_SERVER_URL;
 
    const cancelRequestRef = useRef(false);
@@ -40,6 +39,10 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
 
   const cancelProcessing = (e) => {
     e.preventDefault();
+    setProcessingRequest(false); // track the cancelation with two seperate variables
+    // ProcessingRequest determines which button to show, and the reference tells the
+    // fetch requests to abort
+    setRequestEpoch(-1)
     cancelRequestRef.current = true;
   }
 
@@ -84,7 +87,6 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
 
 
     try {
-      setRequestEpoch(1);
       const response = await fetch(serverURL + '/api/upload', {
         method: 'POST',
         headers: {
@@ -115,7 +117,6 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
               setDisplayImage(null);
               setDisplayImage(`data:image/jpeg;base64,${data.image}`);
               setRequestEpoch(-1)
-              setCancelRequest(false);
               setProcessingRequest(false);
               clearInterval(intervalId);
             }
@@ -129,17 +130,20 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
             else if (data.iteration != 0) {
               setRequestEpoch(data.iteration);
             }
-            else {
-              setRequestEpoch(3);
-            }
+
             if (cancelRequestRef.current) {
               
-              console.log("HELLO")
               cancelRequestRef.current = false;
               
-              setProcessingRequest(false);
+              
               controller.abort();
               setRequestEpoch(-1)
+              const response = fetch(serverURL + `/cancel_task/${taskId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({"message" : "terminate"})});
               clearInterval(intervalId);
             }
             // Optionally, stop polling when the task is completed or failed
@@ -168,23 +172,6 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
       <button onClick={() => setCondition(!condition)}>Toggle Condition</button>
       </div>
       );
-    /*useEffect(() => {
-    const intervalId = setInterval(() => {
-      fetch(`http://localhost:5001/task_status/${taskId}`)
-        .then(response => response.json())
-        .then(data => {
-          setTaskStatus(data.status);
-          // Optionally, stop polling when the task is completed or failed
-          if (data.status === 'completed' || data.status === 'failed') {
-            clearInterval(intervalId);
-          }
-        })
-        .catch(error => console.error('Error fetching task status:', error));
-    }, 2000); // Poll every 2 seconds
-
-    return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [taskId]);*/
-
   };
   const imageClick = () => {
     document.getElementById('fileInput').click();
@@ -224,17 +211,21 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
           <div style={{marginLeft: '20%', marginRight:'20%', display: 'flex', 
           justifyContent:'center', alignItems:'center'}}>
 
-          {requestEpoch != -1 ? (
-          <ProgressBar progress={requestEpoch}/>
-          ) : (<div></div>
+          {requestEpoch == -1 ? (
+            <div> </div>
+          ) : requestEpoch == 0 ? (
+            <div>Request in Queue</div> // Assuming you want to render an empty div if requestEpoch isn't 0
+          ) : (
+            <ProgressBar progress={requestEpoch} /> // This will render if requestEpoch is 0
           )}
+
           
           </div>
           <div style={{margin: '20px', display: 'flex',  justifyContent:'center', alignItems:'center', padding:'20px'}}>
           {!processingRequest ? (
           <button type='submit' style={{padding:'20px'}} className={buttonTypes.roundColorfulButton}>Protect Art</button>
           ) : (
-          <button type='button' onClick={cancelProcessing} style={{padding:'20px'}} className={buttonTypes.roundColorfulButton}>Cancel Request</button>
+          <button type='button' onClick={cancelProcessing} style={{padding:'20px'}} className={buttonTypes.cancelButton}>Cancel Request</button>
           )
         }
           </div>
