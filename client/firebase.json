@@ -1,12 +1,17 @@
 {
   "hosting": {
-    "public": "./",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
-  },
+  // ...
+
+  // Add the "rewrites" attribute within "hosting"
+  "rewrites": [ {
+    "source": "/helloworld",
+    "run": {
+      "serviceId": "helloworld",  // "service name" (from when you deployed the container image)
+      "region": "us-west2",    // optional (if omitted, default is us-central1)
+      "pinTag": true              // optional (see note below)
+    }
+  } ]
+},
   "emulators": {
     "auth": {
       "port": 9099

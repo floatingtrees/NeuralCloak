@@ -37,15 +37,16 @@ async def lifespan(app: FastAPI):
     tasks = manager.dict()
     model1, _ = clip.load('ViT-B/32')
     tasks['ViT-B/32'] = model1
-    model2 , _ = clip.load('RN50')
-    tasks['RN50'] = model2
+    #model2 , _ = clip.load('RN50')
+    #tasks['RN50'] = model2
     yield
 
 app = FastAPI(lifespan=lifespan)
 
 
 origins = ["https://client-ey6altycha-wl.a.run.app", 
-            "https://neuralcloak.com"]
+            "https://neuralcloak.com", 
+            "http://localhost:3000"]
 # Add CORSMiddleware to the application
 app.add_middleware(
     CORSMiddleware,

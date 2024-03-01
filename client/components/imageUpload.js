@@ -37,6 +37,8 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
     }
   };
 
+  
+  
   const cancelProcessing = (e) => {
     e.preventDefault();
     setProcessingRequest(false); // track the cancelation with two seperate variables

@@ -59,7 +59,7 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
     all_models[model_name] = model_stats 
 
     #Resnet 50
-    
+    '''
     model_name = 'RN50'
     model = tasks[model_name]
     model.eval().to(device)
@@ -72,7 +72,7 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
     model_stats = {"model_name" : model_name, "model" : model, 
                 "transform" : RN50, "positive" : positive, "negative" : negative} 
     all_models[model_name] = model_stats
-
+'''
     
 
     # write to shared memory
