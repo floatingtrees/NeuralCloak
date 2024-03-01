@@ -35,6 +35,7 @@ def convertToImage(tensor):
 
 
 def parallelized_generate(image, negative_text_list, positive_text_list, shm_name, tasks):
+    image = image.convert('RGB')
     if torch.backends.mps.is_available():
         device = "mps"
     elif torch.cuda.is_available():
@@ -75,6 +76,7 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
     
 
     # write to shared memory
+
     image = to_tensor(image).unsqueeze(0)
     image_input = image.clone().detach().to(device)
     image_output, _ = attack.parallel_attack(all_models, image, negative_text_list, positive_text_list, shm_name, tasks, device)
@@ -92,22 +94,24 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
 
 
 if __name__ == '__main__':
-    src_img = Image.open("shark-demo2.jpg")
+    src_img = Image.open("sharkDemo2.png")
+    tasks = dict()
+    model1, _ = clip.load('ViT-B/32')
+    tasks['ViT-B/32'] = model1
+    model2 , _ = clip.load('RN50')
+    tasks['RN50'] = model2
+
+
     negative_text_list = ["great white shark", "shark in the ocean", "marine life"]
     positive_text_list = ["potato"]
     queue = Queue()
     shm = shared_memory.SharedMemory(create = True, size = 100000000)
-    p = Process(target = parallelized_generate, args = (src_img, negative_text_list, positive_text_list, queue, shm.name))
+    p = Process(target = parallelized_generate, args = (src_img, negative_text_list, positive_text_list, shm.name, tasks))
     p.start()
     p.join()
-    list_queue = []
-    last_item = 0
-    while not queue.empty():
-        last_item = queue.get()
-        list_queue.append(last_item)
-    print(len(list_queue))
-
-    
+    print("HI")
+    print(tasks.keys())
+    last_item = tasks[shm.name]
     if type(last_item) is int:
         pass
     else:

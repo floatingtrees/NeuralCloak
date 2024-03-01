@@ -1,4 +1,4 @@
-import { useState} from 'react';
+import { useState, useRef} from 'react';
 import TextInput from './text_box';
 import ProgressBar from './ProgressBar';
 import buttonTypes from './roundColorfulButton.module.css';
@@ -14,13 +14,20 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
   const [imageEncoding, setImageEncoding] = useState('');
   const [fileName, setFileName] = useState('');
   const [requestEpoch, setRequestEpoch] = useState(-1);
+  const [processingRequest, setProcessingRequest] = useState(false);
+  const [cancelRequest, setCancelRequest] = useState(false);
   const serverURL = process.env.NEXT_PUBLIC_SERVER_URL;
 
-   
+   const cancelRequestRef = useRef(false);
+   const controller = new AbortController();
+   const signal = controller.signal;
+
+
 
   const refreshText = (e) => {
     setDesiredClass(e.target.value);
   }
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -31,6 +38,11 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
     }
   };
 
+  const cancelProcessing = (e) => {
+    e.preventDefault();
+    cancelRequestRef.current = true;
+  }
+
   const convertToBase64 = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -39,6 +51,7 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
   });
 
   const uploadImage = async (e) => {
+    setProcessingRequest(true);
     e.preventDefault();
     if (!selectedImage) {
       alert('Please select an image.');
@@ -84,43 +97,65 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
         setMessage("Success");
         const data = await response.json();
         const taskId = data.task_id
-        console.log(taskId)
 
 
         const intervalId = setInterval(() => {
-        fetch(serverURL + `/task_status/${taskId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        })
+          
+          fetch(serverURL + `/task_status/${taskId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }, controller
+          })
 
-        .then(response => response.json())
-        .then(data => {
-          if (data.iteration == -1) {
-            setDisplayImage(null);
-            setDisplayImage(`data:image/jpeg;base64,${data.image}`);
-            setRequestEpoch(-1)
-            clearInterval(intervalId);
-          }
-          if (data.iteration != 0) {
-            setRequestEpoch(data.iteration);
-          }
-          else {
-            setRequestEpoch(3);
-          }
-          // Optionally, stop polling when the task is completed or failed
-        })
+          .then(response => response.json())
+          .then(data => {
+
+            if (data.iteration == -1) { // set request epoch to -1 to bypass this
+              setDisplayImage(null);
+              setDisplayImage(`data:image/jpeg;base64,${data.image}`);
+              setRequestEpoch(-1)
+              setCancelRequest(false);
+              setProcessingRequest(false);
+              clearInterval(intervalId);
+            }
+            
+            if (data.message == "Request Timed Out") {
+              alert("Request Timed Out")
+              setRequestEpoch(-1)
+              setProcessingRequest(false);
+              clearInterval(intervalId);
+            }
+            else if (data.iteration != 0) {
+              setRequestEpoch(data.iteration);
+            }
+            else {
+              setRequestEpoch(3);
+            }
+            if (cancelRequestRef.current) {
+              
+              console.log("HELLO")
+              cancelRequestRef.current = false;
+              
+              setProcessingRequest(false);
+              controller.abort();
+              setRequestEpoch(-1)
+              clearInterval(intervalId);
+            }
+            // Optionally, stop polling when the task is completed or failed
+          })
         .catch(error => console.error('Error fetching task status:', error));
     }, 2000); 
       } else {
         alert('Image upload failed.');
         setRequestEpoch(-1)
+        setProcessingRequest(false)
       }
     } catch (error) {
       console.error('Error uploading the image:', error);
       alert('Error uploading image.');
       setRequestEpoch(-1)
+      setProcessingRequest(false)
     }
     
 
@@ -196,8 +231,12 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
           
           </div>
           <div style={{margin: '20px', display: 'flex',  justifyContent:'center', alignItems:'center', padding:'20px'}}>
-          
+          {!processingRequest ? (
           <button type='submit' style={{padding:'20px'}} className={buttonTypes.roundColorfulButton}>Protect Art</button>
+          ) : (
+          <button type='button' onClick={cancelProcessing} style={{padding:'20px'}} className={buttonTypes.roundColorfulButton}>Cancel Request</button>
+          )
+        }
           </div>
           
           </form>

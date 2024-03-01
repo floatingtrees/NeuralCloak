@@ -18,10 +18,14 @@ RUN npm run build
 
 
 # Make port 3000 available to the world outside this container
-ARG PORT=3000
+ARG PORT=3001
 ENV PORT $PORT
 EXPOSE $PORT
 
+ARG NEXT_PUBLIC_SERVER_URL=https://server-ey6altycha-wl.a.run.app
+ENV NEXT_PUBLIC_SERVER_URL $NEXT_PUBLIC_SERVER_URL
+
 # Run serve when the container launches
-CMD ["npm", "start"]
+CMD npm start -p 
+
 

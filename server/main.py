@@ -15,6 +15,8 @@ import threading
 import inspect
 from pydantic import BaseModel
 import os
+from contextlib import asynccontextmanager
+
 
 import uvicorn
 
@@ -27,8 +29,23 @@ class UploadRequest(BaseModel):
     negative: list[str]
     positive: list[str]
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global manager, tasks
+    manager = Manager()
 
+    tasks = manager.dict()
+    model1, _ = clip.load('ViT-B/32')
+    tasks['ViT-B/32'] = model1
+    model2 , _ = clip.load('RN50')
+    tasks['RN50'] = model2
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+
+origins = ["https://client-ey6altycha-wl.a.run.app", 
+            "https://neuralcloak.com"]
 # Add CORSMiddleware to the application
 app.add_middleware(
     CORSMiddleware,
@@ -65,16 +82,7 @@ def release_shared_memory(name):
     except FileNotFoundError:
         print(f"Shared memory with name {name} already released or not found.")
 
-@app.on_event("startup")
-def startup_event():
-    global manager, tasks
-    manager = Manager()
 
-    tasks = manager.dict()
-    model1, _ = clip.load('ViT-B/32')
-    tasks['ViT-B/32'] = model1
-    model2 , _ = clip.load('RN50')
-    tasks['RN50'] = model2
  
 @app.get('/task_status/{task_id}')
 def get_task_status(task_id):
@@ -82,7 +90,7 @@ def get_task_status(task_id):
     try:
         shm = shared_memory.SharedMemory(name=task_id) 
     except:
-        return {'error' : "Request Timed Out"}
+        return {'message' : "Request Timed Out"}
     last_item = tasks[task_id]
     if type(last_item) is int:
         return {"message" : "Finished", "iteration" : last_item}
@@ -131,7 +139,7 @@ async def upload_file(data : UploadRequest):
     p = Process(target = generate.parallelized_generate, args = (img, negative_text_list, positive_text_list, shm.name, tasks))
     p.start()
     tasks[shm.name] = 0
-    delay = 1800
+    delay = 3600
     timer = threading.Timer(delay, release_shared_memory, [shm.name])
     timer.start()
     primary = {'message': 'File uploaded successfully', 'task_id': shm.name}

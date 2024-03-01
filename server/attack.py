@@ -20,7 +20,7 @@ def parallel_attack(all_models, image, negative_text_list, positive_text_list, s
     total_samples = len(all_models) * samples_per_batch
     for i in range(max_epochs):
         optimizer.zero_grad()
-
+        print(f"EPOCH{i}")
         output_array = torch.zeros((total_samples, 1))
         for j, key in enumerate(all_models.keys()):
             model_stats = all_models[key]
@@ -46,6 +46,7 @@ def parallel_attack(all_models, image, negative_text_list, positive_text_list, s
         x.backward() # 
         optimizer.step()
         tasks[shm_name] = i
+        print(f"EPOCH{i}b")
     
     gap = len(all_models)
     total_negatives = len(negative_text_list)
@@ -59,7 +60,7 @@ def parallel_attack(all_models, image, negative_text_list, positive_text_list, s
                 probs +=  output_array[j]
             
         total_probs[text] = probs/gap
-
+    print("DONE")
 
 
     return image_input, total_probs
