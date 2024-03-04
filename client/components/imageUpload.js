@@ -1,6 +1,7 @@
 import { useState, useRef} from 'react';
 import TextInput from './text_box';
 import ProgressBar from './ProgressBar';
+import ColorChangeButton from './ButtonChange';
 import buttonTypes from './buttons.module.css';
 
 
@@ -96,12 +97,12 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
         },
         body: JSON.stringify({ 'image' : imageBase64, 'negative' : negativeTextValues, 
           'positive' : positiveTextValues})});
-      
+      console.log(response, response.ok)
       if (response.ok) {
         setMessage("Success");
         const data = await response.json();
         const taskId = data.task_id
-
+        console.log(taskId)
 
         const intervalId = setInterval(() => {
           
@@ -230,8 +231,9 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
           <button type='button' onClick={cancelProcessing} style={{padding:'20px'}} className={buttonTypes.cancelButton}>Cancel Request</button>
           )
         }
+
           </div>
-          
+          {/*<ColorChangeButton type='button'base='yellow' change='green'> hiasdfhosauidf </ColorChangeButton>*/}
           </form>
 
 

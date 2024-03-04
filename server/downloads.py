@@ -14,6 +14,6 @@ model, _ = clip.load(model_name)
 model.eval()
 
 
-model_name = 'RN50'
-model, _ = clip.load(model_name)
-model.eval()
+#model_name = 'RN50'
+#model, _ = clip.load(model_name)
+#model.eval()

@@ -3,7 +3,7 @@ services:
   fastapi:
     build: ./server  # Ensure this is the correct path to your FastAPI app
     ports:
-      - "8000:8000"  # Expose FastAPI on port 5001
+      - "8080:8080"  # Expose FastAPI on port 5001
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
     # Note: Replace 'server:app' with the actual Python module and FastAPI app instance names
     # The --reload flag is used for development and automatically reloads the server on code changes

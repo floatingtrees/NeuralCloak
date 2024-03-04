@@ -35,8 +35,8 @@ async def lifespan(app: FastAPI):
     manager = Manager()
 
     tasks = manager.dict()
-    model1, _ = clip.load('ViT-B/32')
-    tasks['ViT-B/32'] = model1
+    #model1, _ = clip.load('ViT-B/32')
+    #tasks['ViT-B/32'] = model1
     #model2 , _ = clip.load('RN50')
     #tasks['RN50'] = model2
     yield
@@ -120,7 +120,6 @@ def get_task_status(task_id):
 @app.post('/api/upload')
 async def upload_file(data : UploadRequest):
     
-    
     image_data = data.image
 
     negative_text_list = data.negative
@@ -146,7 +145,7 @@ async def upload_file(data : UploadRequest):
     p = Process(target = generate.parallelized_generate, args = (img, negative_text_list, positive_text_list, shm.name, tasks))
     p.start()
     tasks[shm.name] = 0
-    delay = 3600
+    delay = 7200
     timer = threading.Timer(delay, release_shared_memory, [shm.name])
     timer.start()
     primary = {'message': 'File uploaded successfully', 'task_id': shm.name}

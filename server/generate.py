@@ -47,7 +47,7 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
 
     #ViT
     model_name = 'ViT-B/32'
-    model = tasks[model_name]
+    model, _ = clip.load('ViT-B/32')
     model.eval().to(device)
     ViT_B32 = transforms.Compose([
             torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
