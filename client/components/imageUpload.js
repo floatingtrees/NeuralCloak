@@ -21,7 +21,7 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
    const cancelRequestRef = useRef(false);
    const controller = new AbortController();
    const signal = controller.signal;
-
+   console.log(NEXT_PUBLIC_SERVER_URL)
 
 
   const refreshText = (e) => {

@@ -1,0 +1,59 @@
+---
+apiVersion: "v1"
+kind: "ConfigMap"
+metadata:
+  name: "server-config-c7bt"
+  namespace: "default"
+  labels:
+    app: "kitchen"
+data:
+  PORT: "8080"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "server"
+  namespace: "default"
+  labels:
+    app: "kitchen"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "kitchen"
+  template:
+    metadata:
+      labels:
+        app: "kitchen"
+    spec:
+      containers:
+      - name: "server-sha256-1"
+        image: "us-west2-docker.pkg.dev/neuralcloak-415702/neuralcloak/server@sha256:901b75677bed3809e5052a645f647bcafc90edcdbaed950c96a11388f0beb801"
+        env:
+        - name: "PORT"
+          valueFrom:
+            configMapKeyRef:
+              key: "PORT"
+              name: "server-config-c7bt"
+---
+apiVersion: "autoscaling/v2"
+kind: "HorizontalPodAutoscaler"
+metadata:
+  name: "server-hpa-bg6k"
+  namespace: "default"
+  labels:
+    app: "kitchen"
+spec:
+  scaleTargetRef:
+    kind: "Deployment"
+    name: "server"
+    apiVersion: "apps/v1"
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: "Resource"
+    resource:
+      name: "cpu"
+      target:
+        type: "Utilization"
+        averageUtilization: 80

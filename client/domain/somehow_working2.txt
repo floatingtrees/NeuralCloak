@@ -1,0 +1,20 @@
+
+; <<>> DiG 9.10.6 <<>> neuralcloak.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 46361
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1220
+;; QUESTION SECTION:
+;neuralcloak.com.		IN	A
+
+;; AUTHORITY SECTION:
+neuralcloak.com.	284	IN	SOA	ns-cloud-c1.googledomains.com. cloud-dns-hostmaster.google.com. 1 21600 3600 259200 300
+
+;; Query time: 15 msec
+;; SERVER: 128.97.128.1#53(128.97.128.1)
+;; WHEN: Sun Mar 03 18:57:35 PST 2024
+;; MSG SIZE  rcvd: 134
+
