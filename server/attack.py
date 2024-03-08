@@ -10,7 +10,7 @@ from multiprocessing import Process, Queue
 import clip
 import timm
 
-def parallel_attack(all_models, image, negative_text_list, positive_text_list, shm_name, tasks, device, max_epochs = 100):
+def parallel_attack(task, r, all_models, image, negative_text_list, positive_text_list, device, task_id, max_epochs = 10000):
     image_input = image
     image_input.requires_grad = True
     optimizer = torch.optim.Adam(list([image_input, ]), lr = 0.0005, betas = (0.9, 0.999), maximize = False)
@@ -45,9 +45,11 @@ def parallel_attack(all_models, image, negative_text_list, positive_text_list, s
             break
         x.backward() # 
         optimizer.step()
-        if tasks[shm_name] == "canceled":
+        task.update_state(state='PROGRESS', meta={'current': i, 'total': 100})
+        status = r.get(f'task:{task_id}')
+        print(status)
+        if status == b'canceled':
             return ("canceled", None)
-        tasks[shm_name] = i
         print(f"EPOCH{i}b")
     
     gap = len(all_models)

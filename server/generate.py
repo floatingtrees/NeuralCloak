@@ -8,7 +8,14 @@ import numpy as np
 from multiprocessing import Process, Queue, shared_memory
 from io import BytesIO
 import base64
+from celery.contrib.abortable import AbortableTask
+from celery import Celery
+import redis
 
+app = Celery('tasks', broker='redis://localhost:6379/0')
+app.conf.result_backend = 'redis://localhost:6379/0'
+app.conf.task_serializer = 'json'
+r = redis.Redis(host='localhost', port=6379, db=0)
 
 
 def encode_text(model, negative_text_list, positive_text_list, device):
@@ -33,8 +40,11 @@ def convertToImage(tensor):
     return Image.fromarray((image * 255).astype(np.uint8))
 
 
+@app.task(name='parallelized_generate', bind=True)
+def parallelized_generate(self, image_data, negative_text_list, positive_text_list):
+    decoded_image = base64.b64decode(image_data)
 
-def parallelized_generate(image, negative_text_list, positive_text_list, shm_name, tasks):
+    image = Image.open(BytesIO(decoded_image))
     image = image.convert('RGB')
     if torch.backends.mps.is_available():
         device = "mps"
@@ -44,7 +54,6 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
         device = "cpu"
     to_tensor = transforms.Compose([transforms.ToTensor()])
     all_models = {}
-
     #ViT
     model_name = 'ViT-B/32'
     model, _ = clip.load('ViT-B/32')
@@ -79,24 +88,21 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
 
     image = to_tensor(image).unsqueeze(0)
     image_input = image.clone().detach().to(device)
-    image_output, _ = attack.parallel_attack(all_models, image, negative_text_list, positive_text_list, shm_name, tasks, device)
-    if image_output == "canceled":
-        try: # we don't know for sure if this side will close the shm before the server code
-            shm = shared_memory.SharedMemory(name=shm_name)
-            shm.close()
-            shm.unlink()
-        except Exception as e:
-            print("Generation", e) 
-        exit()
+    task_id = self.request.id
+    image_output, _ = attack.parallel_attack(self, r, all_models, image, negative_text_list, positive_text_list, device, task_id)
+    if image_output == 'canceled':
+        return None
     converted_image = convertToImage(image_output)
+    buffer = BytesIO()
+            
+    buffer.seek(0)
+    
+    converted_image.save("temp2.png")
+    converted_image.save(buffer, format='PNG')
+    encoded_string = base64.b64encode(buffer.getvalue()).decode()
 
+    return encoded_string
 
-    shm = shared_memory.SharedMemory(name=shm_name)
-    img_array = np.array(converted_image)
-    shm_array = np.ndarray(img_array.shape, dtype=img_array.dtype, buffer=shm.buf)
-    np.copyto(shm_array, img_array)
-    tasks[shm_name] = img_array.shape
-    shm.close()
     
 
 
