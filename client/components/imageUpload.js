@@ -21,7 +21,7 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
    const cancelRequestRef = useRef(false);
    const controller = new AbortController();
    const signal = controller.signal;
-   console.log(serverURL)
+   //console.log(serverURL)
 
 
   const refreshText = (e) => {
@@ -97,12 +97,12 @@ const ImageUploader = ({positiveTextValues, negativeTextValues}) => {
         },
         body: JSON.stringify({ 'image' : imageBase64, 'negative' : negativeTextValues, 
           'positive' : positiveTextValues})});
-      console.log(response, response.ok)
+      //console.log(response, response.ok)
       if (response.ok) {
         setMessage("Success");
         const data = await response.json();
         const taskId = data.task_id
-        console.log(taskId)
+        //console.log(taskId)
 
         const intervalId = setInterval(() => {
           

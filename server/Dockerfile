@@ -13,7 +13,8 @@ COPY . /app
 # Install any needed packages specified in requirements.txt
 RUN pip install openai-clip
 RUN pip install --no-cache-dir -r requirements.txt
-RUN python3 downloads.py
+#RUN python3 downloads.py
+
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8080
@@ -22,4 +23,4 @@ EXPOSE 8080
 ENV NAME World
 
 # Run main.py when the container launches
-CMD ["python3", "main.py"]
+CMD ["./docker-run.sh"]

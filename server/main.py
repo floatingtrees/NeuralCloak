@@ -41,8 +41,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-origins = ["https://client-ey6altycha-wl.a.run.app", 
-            "https://neuralcloak.com", 
+origins = ["https://client-ey6altycha-wl.a.run.app",
+            "https://neuralcloak.com",
             "http://localhost:3000"]
 # Add CORSMiddleware to the application
 app.add_middleware(
@@ -66,10 +66,10 @@ def allowed_file(filename):
 @app.post('/cancel_task/{task_id}')
 def cancel_task(task_id):
     generate.r.set(f'task:{task_id}', "canceled")
-    
+
     return {'message' : "Request successfully canceled"}
 
- 
+
 @app.get('/task_status/{task_id}')
 def get_task_status(task_id):
 
@@ -89,7 +89,7 @@ def get_task_status(task_id):
 
 @app.post('/api/upload')
 async def upload_file(data : UploadRequest):
-    
+
     image_data = data.image
 
     negative_text_list = data.negative
@@ -111,7 +111,7 @@ async def upload_file(data : UploadRequest):
         return {'error': 'Error decoding image', 'details': str(e)}
         # create a task and run the query function in a loop ######
         ######
-    
+
     task = parallelized_generate.apply_async(args = [image_data, negative_text_list, positive_text_list])
     task_id = task.id
     generate.r.set(f'task:{task_id}', "starting")
@@ -120,7 +120,7 @@ async def upload_file(data : UploadRequest):
     return primary
 
 if __name__ == '__main__':
-    
+
     #manager = Manager()
 
     #tasks = manager.dict()

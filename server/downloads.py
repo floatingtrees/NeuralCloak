@@ -1,6 +1,5 @@
 import os
 import clip
-from torchvision.datasets import CIFAR100
 import torch
 from PIL import Image
 from torchvision import transforms

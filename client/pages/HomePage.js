@@ -43,7 +43,8 @@
      It might take a while, and please don't close your browser while it's loading. 
      After the progress bar reaches 100%, you can download the image and use it as you please. 
      If you're interested in how this works, take a look <Link href="/AboutUs"> here</Link>. 
-     Currently, we only support jpg, jpeg, and png formats. 
+     Currently, we only support jpg, jpeg, and png formats. <b> If something on the website breaks, 
+     join the Discord and I'll fix it</b>.
      </p> 
      </div>
      <div style={{display: 'flex', justifyContent:'center', 

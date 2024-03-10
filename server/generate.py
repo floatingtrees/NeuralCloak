@@ -15,7 +15,7 @@ import redis
 app = Celery('tasks', broker='redis://localhost:6379/0')
 app.conf.result_backend = 'redis://localhost:6379/0'
 app.conf.task_serializer = 'json'
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host='my_redis_service', port=6379, db=0)
 
 
 def encode_text(model, negative_text_list, positive_text_list, device):
@@ -59,13 +59,13 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
     model, _ = clip.load('ViT-B/32')
     model.eval().to(device)
     ViT_B32 = transforms.Compose([
-            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
-            transforms.CenterCrop(224), 
+            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True),
+            transforms.CenterCrop(224),
             transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
     negative, positive = encode_text(model, negative_text_list, positive_text_list, device)
-    model_stats = {"model_name" : model_name, "model" : model, 
+    model_stats = {"model_name" : model_name, "model" : model,
                 "transform" : ViT_B32, "positive" : positive, "negative" : negative}
-    all_models[model_name] = model_stats 
+    all_models[model_name] = model_stats
 
     #Resnet 50
     '''
@@ -73,16 +73,16 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
     model = tasks[model_name]
     model.eval().to(device)
     RN50 = transforms.Compose([
-            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
-            transforms.CenterCrop(224), 
+            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True),
+            transforms.CenterCrop(224),
             transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
     negative, positive = encode_text(model, negative_text_list, positive_text_list, device)
 
-    model_stats = {"model_name" : model_name, "model" : model, 
-                "transform" : RN50, "positive" : positive, "negative" : negative} 
+    model_stats = {"model_name" : model_name, "model" : model,
+                "transform" : RN50, "positive" : positive, "negative" : negative}
     all_models[model_name] = model_stats
 '''
-    
+
 
     # write to shared memory
 
@@ -94,16 +94,16 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
         return None
     converted_image = convertToImage(image_output)
     buffer = BytesIO()
-            
+
     buffer.seek(0)
-    
+
     converted_image.save("temp2.png")
     converted_image.save(buffer, format='PNG')
     encoded_string = base64.b64encode(buffer.getvalue()).decode()
 
     return encoded_string
 
-    
+
 
 
 
@@ -129,11 +129,11 @@ if __name__ == '__main__':
     if type(last_item) is int:
         pass
     else:
-        #shm = shared_memory.SharedMemory(name=shm_name) 
+        #shm = shared_memory.SharedMemory(name=shm_name)
         shape = last_item
         buffer = BytesIO()
-            
-            
+
+
         buffer.seek(0)
 
         shm_array = np.ndarray(shape, dtype=np.uint8, buffer=shm.buf)
