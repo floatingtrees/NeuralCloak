@@ -1,15 +1,15 @@
-version: '3'
+version: "3"
 services:
   fastapi:
-    build: ./server  # Ensure this is the correct path to your FastAPI app
+    build: ./server # Ensure this is the correct path to your FastAPI app
     ports:
-      - "8080:8080"  # Expose FastAPI on port 5001
+      - "8080:8080" # Expose FastAPI on port 5001
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
     # Note: Replace 'server:app' with the actual Python module and FastAPI app instance names
     # The --reload flag is used for development and automatically reloads the server on code changes
 
   nextjs:
-    build: ./client  # Ensure this is the correct path to your Next.js app
+    build: ./client # Ensure this is the correct path to your Next.js app
     ports:
       - "3000:3000"
     environment:
@@ -17,3 +17,5 @@ services:
       # Use NEXT_PUBLIC_ prefix for env vars to expose them to the browser in Next.js
     depends_on:
       - fastapi
+  redis:
+    image: redis:7-alpine
