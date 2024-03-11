@@ -5,6 +5,10 @@ services:
     ports:
       - "8080:8080" # Expose FastAPI on port 5001
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379/0
     # Note: Replace 'server:app' with the actual Python module and FastAPI app instance names
     # The --reload flag is used for development and automatically reloads the server on code changes
 
@@ -17,5 +21,14 @@ services:
       # Use NEXT_PUBLIC_ prefix for env vars to expose them to the browser in Next.js
     depends_on:
       - fastapi
+      - redis
   redis:
     image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  worker:
+    build: ./server
+    command: celery -A generate worker --loglevel=info --pool gevent
+    depends_on:
+      - redis
+      - fastapi

@@ -11,11 +11,16 @@ import base64
 from celery.contrib.abortable import AbortableTask
 from celery import Celery
 import redis
+import os
 
-app = Celery('tasks', broker='redis://localhost:6379/0')
-app.conf.result_backend = 'redis://localhost:6379/0'
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+
+app = Celery('tasks', broker=REDIS_URL)
+app.conf.result_backend = REDIS_URL
 app.conf.task_serializer = 'json'
-r = redis.Redis(host='my_redis_service', port=6379, db=0)
+
+# For the Redis client, parse the REDIS_URL or use default values
+r = redis.Redis.from_url(REDIS_URL)
 
 
 def encode_text(model, negative_text_list, positive_text_list, device):
