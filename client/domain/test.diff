@@ -1,0 +1,16 @@
+5c5
+< ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 30654
+---
+> ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 36269
+14c14
+< neuralcloak.com.	254	IN	SOA	ns-cloud-c1.googledomains.com. cloud-dns-hostmaster.google.com. 1 21600 3600 259200 300
+---
+> neuralcloak.com.	279	IN	SOA	ns-cloud-c1.googledomains.com. cloud-dns-hostmaster.google.com. 1 21600 3600 259200 300
+16c16
+< ;; Query time: 13 msec
+---
+> ;; Query time: 16 msec
+18c18
+< ;; WHEN: Sun Mar 03 16:58:16 PST 2024
+---
+> ;; WHEN: Sun Mar 03 13:45:37 PST 2024

@@ -8,7 +8,19 @@ import numpy as np
 from multiprocessing import Process, Queue, shared_memory
 from io import BytesIO
 import base64
+from celery.contrib.abortable import AbortableTask
+from celery import Celery
+import redis
+import os
 
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+
+app = Celery('tasks', broker=REDIS_URL)
+app.conf.result_backend = REDIS_URL
+app.conf.task_serializer = 'json'
+
+# For the Redis client, parse the REDIS_URL or use default values
+r = redis.Redis.from_url(REDIS_URL)
 
 
 def encode_text(model, negative_text_list, positive_text_list, device):
@@ -33,8 +45,11 @@ def convertToImage(tensor):
     return Image.fromarray((image * 255).astype(np.uint8))
 
 
+@app.task(name='parallelized_generate', bind=True)
+def parallelized_generate(self, image_data, negative_text_list, positive_text_list):
+    decoded_image = base64.b64decode(image_data)
 
-def parallelized_generate(image, negative_text_list, positive_text_list, shm_name, tasks):
+    image = Image.open(BytesIO(decoded_image))
     image = image.convert('RGB')
     if torch.backends.mps.is_available():
         device = "mps"
@@ -44,19 +59,18 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
         device = "cpu"
     to_tensor = transforms.Compose([transforms.ToTensor()])
     all_models = {}
-
     #ViT
     model_name = 'ViT-B/32'
-    model = tasks[model_name]
+    model, _ = clip.load('ViT-B/32')
     model.eval().to(device)
     ViT_B32 = transforms.Compose([
-            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
-            transforms.CenterCrop(224), 
+            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True),
+            transforms.CenterCrop(224),
             transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
     negative, positive = encode_text(model, negative_text_list, positive_text_list, device)
-    model_stats = {"model_name" : model_name, "model" : model, 
+    model_stats = {"model_name" : model_name, "model" : model,
                 "transform" : ViT_B32, "positive" : positive, "negative" : negative}
-    all_models[model_name] = model_stats 
+    all_models[model_name] = model_stats
 
     #Resnet 50
     '''
@@ -64,76 +78,45 @@ def parallelized_generate(image, negative_text_list, positive_text_list, shm_nam
     model = tasks[model_name]
     model.eval().to(device)
     RN50 = transforms.Compose([
-            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True), 
-            transforms.CenterCrop(224), 
+            torchvision.transforms.Resize(224,  interpolation=torchvision.transforms.InterpolationMode.BICUBIC, antialias = True),
+            transforms.CenterCrop(224),
             transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
     negative, positive = encode_text(model, negative_text_list, positive_text_list, device)
 
-    model_stats = {"model_name" : model_name, "model" : model, 
-                "transform" : RN50, "positive" : positive, "negative" : negative} 
+    model_stats = {"model_name" : model_name, "model" : model,
+                "transform" : RN50, "positive" : positive, "negative" : negative}
     all_models[model_name] = model_stats
 '''
-    
+
 
     # write to shared memory
 
     image = to_tensor(image).unsqueeze(0)
     image_input = image.clone().detach().to(device)
-    image_output, _ = attack.parallel_attack(all_models, image, negative_text_list, positive_text_list, shm_name, tasks, device)
-    if image_output == "canceled":
-        try: # we don't know for sure if this side will close the shm before the server code
-            shm = shared_memory.SharedMemory(name=shm_name)
-            shm.close()
-            shm.unlink()
-        except Exception as e:
-            print("Generation", e) 
-        exit()
+    task_id = self.request.id
+    image_output = attack.parallel_attack(self, r, all_models, image, negative, positive, device, task_id)
+    if image_output == 'canceled':
+        return "canceled"
+    total_probs = {}
+    transformed = ViT_B32(image_output).to(device)
+    model.to(device)
+    image_features = model.encode_image(transformed)
+    image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+    for i, text in enumerate(negative_text_list + positive_text_list):
+        with torch.no_grad():
+            encoding = torch.cat([clip.tokenize(text)]).to(device)
+            features = model.encode_text(encoding)
+            text_features = features / features.norm(dim = -1)
+            similarity = image_features @ text_features.T
+        print(f"{text}: {round(float(similarity), 3)}")
+
     converted_image = convertToImage(image_output)
+    buffer = BytesIO()
 
+    buffer.seek(0)
 
-    shm = shared_memory.SharedMemory(name=shm_name)
-    img_array = np.array(converted_image)
-    shm_array = np.ndarray(img_array.shape, dtype=img_array.dtype, buffer=shm.buf)
-    np.copyto(shm_array, img_array)
-    tasks[shm_name] = img_array.shape
-    shm.close()
-    
+    converted_image.save("temp2.png")
+    converted_image.save(buffer, format='PNG')
+    encoded_string = base64.b64encode(buffer.getvalue()).decode()
 
-
-
-if __name__ == '__main__':
-    src_img = Image.open("sharkDemo2.png")
-    tasks = dict()
-    model1, _ = clip.load('ViT-B/32')
-    tasks['ViT-B/32'] = model1
-    model2 , _ = clip.load('RN50')
-    tasks['RN50'] = model2
-
-
-    negative_text_list = ["great white shark", "shark in the ocean", "marine life"]
-    positive_text_list = ["potato"]
-    queue = Queue()
-    shm = shared_memory.SharedMemory(create = True, size = 100000000)
-    p = Process(target = parallelized_generate, args = (src_img, negative_text_list, positive_text_list, shm.name, tasks))
-    p.start()
-    p.join()
-    print("HI")
-    print(tasks.keys())
-    last_item = tasks[shm.name]
-    if type(last_item) is int:
-        pass
-    else:
-        #shm = shared_memory.SharedMemory(name=shm_name) 
-        shape = last_item
-        buffer = BytesIO()
-            
-            
-        buffer.seek(0)
-
-        shm_array = np.ndarray(shape, dtype=np.uint8, buffer=shm.buf)
-        converted_image = Image.fromarray(shm_array)
-        converted_image.save("temp.png")
-        converted_image.save(buffer, format='PNG')
-        encoded_string = base64.b64encode(buffer.getvalue()).decode()
-    shm.close()
-    shm.unlink()
+    return encoded_string

@@ -1,0 +1,23 @@
+
+; <<>> DiG 9.10.6 <<>> neuralcloak.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 6224
+;; flags: qr rd ra; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1220
+;; QUESTION SECTION:
+;neuralcloak.com.		IN	A
+
+;; ANSWER SECTION:
+neuralcloak.com.	3562	IN	A	216.239.36.21
+neuralcloak.com.	3562	IN	A	216.239.34.21
+neuralcloak.com.	3562	IN	A	216.239.32.21
+neuralcloak.com.	3562	IN	A	216.239.38.21
+
+;; Query time: 16 msec
+;; SERVER: 128.97.128.1#53(128.97.128.1)
+;; WHEN: Sun Mar 03 21:47:55 PST 2024
+;; MSG SIZE  rcvd: 108
+
