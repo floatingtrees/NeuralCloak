@@ -89,6 +89,8 @@ def get_task_status(task_id):
 
 @app.post('/api/upload')
 async def upload_file(data : UploadRequest):
+    if len(data.image) > 10000000: # reject lengths over 10 million
+        return {'message': "file too big"}
 
     image_data = data.image
 

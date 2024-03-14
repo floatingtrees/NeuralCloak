@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# Start Redis in the background
-celery -A djangoproject worker -l info --detach
+# Start Celery in the background
+#
+python3 main.py &
+celery -A generate worker --loglevel=info --pool gevent
 
 # Start your Python application
-python3 main.py

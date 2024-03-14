@@ -22,5 +22,18 @@ EXPOSE 8080
 # Define environment variable
 ENV REDIS_URL redis://redis:6379/0
 
+#RUN echo ls /
+#RUN addgroup --system appuser && adduser --system --group appuser
+#
+#
+
+#RUN groupadd -r appuser && useradd --no-log-init -r -g appuser -u 1000 appuser
+#RUN chown -R appuser:appuser /app
+#RUN chmod -R o+r /
+#RUN chmod -R o+x /
+
+# Switch to the non-root user
+
+
 # Run main.py when the container launches
 CMD ["python3", "main.py"]

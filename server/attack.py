@@ -10,17 +10,30 @@ from multiprocessing import Process, Queue
 import clip
 import timm
 
-def parallel_attack(task, r, all_models, image, negative_text_list, positive_text_list, device, task_id, max_epochs = 10000):
-    image_input = image
-    image_input.requires_grad = True
-    optimizer = torch.optim.Adam(list([image_input, ]), lr = 0.0005, betas = (0.9, 0.999), maximize = False)
-    
-    # If not cloned, loss must retain graph to 
-    samples_per_batch = len(negative_text_list) + len(positive_text_list)
+def tanh(noise):
+    ex = torch.exp(noise)
+    ex_inv = torch.exp(-noise)
+    return ((ex - ex_inv) / (ex + ex_inv))
+
+def parallel_attack(task, r, all_models, image, negative_text_list, positive_text_list, device, task_id, max_epochs = 100, similarity = 0.08):
+    noise = torch.zeros(image.shape, dtype = torch.float32)
+    noise.requires_grad = True
+    optimizer = torch.optim.Adam(list([noise, ]), lr = 0.001, betas = (0.9, 0.999), maximize = False)
+
+
+    # If not cloned, loss must retain graph to
+    samples_per_batch = negative_text_list.shape[0] + positive_text_list.shape[0]
     total_samples = len(all_models) * samples_per_batch
+    original = image.clone().detach()
+    c_origin = 1e+3
+    c = c_origin
+    penal_constant = 1
+    k = penal_constant
     for i in range(1, max_epochs + 1):
+        k -= (penal_constant / max_epochs) / 1.3
+        c -= c_origin / max_epochs
         optimizer.zero_grad()
-        print(f"EPOCH{i}")
+        image_input = image + similarity * tanh(noise)
         output_array = torch.zeros((total_samples, 1))
         for j, key in enumerate(all_models.keys()):
             model_stats = all_models[key]
@@ -37,34 +50,23 @@ def parallel_attack(task, r, all_models, image, negative_text_list, positive_tex
             x2 = positive_text_features @ image_features.T
 
 
-            x2 = 1 - x2 # use trig identities to compute inverse similarity
+            x2 = 1 - torch.square(x2) * torch.sign(x2) # use trig identities to compute inverse similarity
             model_output = torch.concatenate([x1, x2], dim = 0)
             output_array[samples_per_batch * j : samples_per_batch * (j + 1), :] = model_output
-        x = torch.mean(output_array, dim = None, keepdim = True)
-        if x < 0.2:
+
+        to_probs = torch.abs(tanh(noise))
+        clipped = torch.maximum(to_probs - k, torch.tensor(0.0))
+        y = torch.mean(output_array, dim = None, keepdim = True) + c * torch.mean(torch.square(noise)) + torch.sum(clipped)
+        if y < 0.2:
             break
-        x.backward() # 
+        y.backward() #
         optimizer.step()
         task.update_state(state='PROGRESS', meta={'current': i, 'total': 100})
         status = r.get(f'task:{task_id}')
-        print(status)
         if status == b'canceled':
-            return ("canceled", None)
-        print(f"EPOCH{i}b")
-    
-    gap = len(all_models)
-    total_negatives = len(negative_text_list)
-    total_probs = {}
-    for i, text in enumerate(negative_text_list + positive_text_list):
-        probs = 0
-        for j in range(i, output_array.shape[0], len(negative_text_list) + len(positive_text_list)):
-            if i >=total_negatives:
-                probs += (1- output_array[j])
-            else:
-                probs +=  output_array[j]
-            
-        total_probs[text] = probs/gap
+            return "canceled"
 
-
-    return image_input, total_probs
-
+    ex = torch.exp(noise)
+    ex_inv = torch.exp(-noise)
+    image_input = image + similarity * ((ex - ex_inv) / (ex + ex_inv))
+    return image_input

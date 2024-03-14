@@ -94,9 +94,22 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
     image = to_tensor(image).unsqueeze(0)
     image_input = image.clone().detach().to(device)
     task_id = self.request.id
-    image_output, _ = attack.parallel_attack(self, r, all_models, image, negative_text_list, positive_text_list, device, task_id)
+    image_output = attack.parallel_attack(self, r, all_models, image, negative, positive, device, task_id)
     if image_output == 'canceled':
-        return None
+        return "canceled"
+    total_probs = {}
+    transformed = ViT_B32(image_output).to(device)
+    model.to(device)
+    image_features = model.encode_image(transformed)
+    image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+    for i, text in enumerate(negative_text_list + positive_text_list):
+        with torch.no_grad():
+            encoding = torch.cat([clip.tokenize(text)]).to(device)
+            features = model.encode_text(encoding)
+            text_features = features / features.norm(dim = -1)
+            similarity = image_features @ text_features.T
+        print(f"{text}: {round(float(similarity), 3)}")
+
     converted_image = convertToImage(image_output)
     buffer = BytesIO()
 
@@ -107,44 +120,3 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
     encoded_string = base64.b64encode(buffer.getvalue()).decode()
 
     return encoded_string
-
-
-
-
-
-if __name__ == '__main__':
-    src_img = Image.open("sharkDemo2.png")
-    tasks = dict()
-    model1, _ = clip.load('ViT-B/32')
-    tasks['ViT-B/32'] = model1
-    model2 , _ = clip.load('RN50')
-    tasks['RN50'] = model2
-
-
-    negative_text_list = ["great white shark", "shark in the ocean", "marine life"]
-    positive_text_list = ["potato"]
-    queue = Queue()
-    shm = shared_memory.SharedMemory(create = True, size = 100000000)
-    p = Process(target = parallelized_generate, args = (src_img, negative_text_list, positive_text_list, shm.name, tasks))
-    p.start()
-    p.join()
-    print("HI")
-    print(tasks.keys())
-    last_item = tasks[shm.name]
-    if type(last_item) is int:
-        pass
-    else:
-        #shm = shared_memory.SharedMemory(name=shm_name)
-        shape = last_item
-        buffer = BytesIO()
-
-
-        buffer.seek(0)
-
-        shm_array = np.ndarray(shape, dtype=np.uint8, buffer=shm.buf)
-        converted_image = Image.fromarray(shm_array)
-        converted_image.save("temp.png")
-        converted_image.save(buffer, format='PNG')
-        encoded_string = base64.b64encode(buffer.getvalue()).decode()
-    shm.close()
-    shm.unlink()
