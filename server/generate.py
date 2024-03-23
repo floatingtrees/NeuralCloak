@@ -89,10 +89,10 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
 '''
 
 
-    # write to shared memory
-
     image = to_tensor(image).unsqueeze(0)
     image_input = image.clone().detach().to(device)
+
+
     task_id = self.request.id
     image_output = attack.parallel_attack(self, r, all_models, image, negative, positive, device, task_id)
     if image_output == 'canceled':
