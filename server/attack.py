@@ -15,10 +15,10 @@ def tanh(noise):
     ex_inv = torch.exp(-noise)
     return ((ex - ex_inv) / (ex + ex_inv))
 
-def parallel_attack(task, r, all_models, image, negative_text_list, positive_text_list, device, task_id, max_epochs = 100, similarity = 0.08, epsilon = 0.001, shift = 1):
+def parallel_attack(task, r, all_models, image, negative_text_list, positive_text_list, device, task_id, max_epochs = 100, similarity = 0.1, epsilon = 0.001, shift = 1):
     noise = torch.zeros(image.shape, dtype = torch.float32)
     noise.requires_grad = True
-    optimizer = torch.optim.Adam(list([noise, ]), lr = 0.001, betas = (0.9, 0.999), maximize = False)
+    optimizer = torch.optim.Adam(list([noise, ]), lr = 0.006, betas = (0.9, 0.999), maximize = False)
     if shift == 0:
         raise ValueError("Shift cannot equal zero")
     with torch.no_grad():
@@ -42,8 +42,9 @@ def parallel_attack(task, r, all_models, image, negative_text_list, positive_tex
     image2 = Image.fromarray((image2 * 255).astype(np.uint8))
     image2.save(f"map.jpg")
     binary_map = torch.heaviside(torch.sum(color_map - epsilon, axis = 1).to("cpu"), torch.tensor(0.0)) # linear max
-    if (torch.quantile(binary_map, 0.05) > 0.5):
+    if (torch.quantile(binary_map, 0.05) > 0.5 or torch.quantile(binary_map, 0.99) > 0.5):
         diff_sparse = False
+        similarity = similarity / torch.sum(binary_map) * torch.numel(binary_map)
     else:
         diff_sparse = True
     # If not cloned, loss must retain graph to
@@ -54,6 +55,7 @@ def parallel_attack(task, r, all_models, image, negative_text_list, positive_tex
     c = c_origin
     penal_constant = 1
     k = penal_constant
+    # deal with issues for problems like all same color or 95%+ came color
     for i in range(1, max_epochs + 1):
         if i % 10 == 0:
             print(i)
@@ -64,7 +66,7 @@ def parallel_attack(task, r, all_models, image, negative_text_list, positive_tex
             image_input = image + similarity * tanh(noise)
         else:
             image_input = image + similarity * torch.multiply(tanh(noise), binary_map)
-        image_input = torch.clip(image_input, 0, 1)
+        #image_input = torch.clip(image_input, 0, 1)
         output_array = torch.zeros((total_samples, 1))
         for j, key in enumerate(all_models.keys()):
             model_stats = all_models[key]
