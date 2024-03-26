@@ -113,7 +113,7 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
             similarity = image_features @ text_features.T
         print(f"{text}: {round(float(similarity), 3)}")
         negative_preds[text] = round(float(similarity), 5)
-    for i, text in enumerate(positive):
+    for i, text in enumerate(positive_text_list):
         with torch.no_grad():
             encoding = torch.cat([clip.tokenize(text)]).to(device)
             features = model.encode_text(encoding)
@@ -131,4 +131,4 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
     converted_image.save(buffer, format='PNG')
     encoded_string = base64.b64encode(buffer.getvalue()).decode()
 
-    return (encoded_string, negative_preds, positive_preds)
+    return encoded_string, negative_preds, positive_preds
