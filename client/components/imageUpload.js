@@ -7,9 +7,7 @@ import buttonTypes from "./buttons.module.css";
 const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [displayImage, setDisplayImage] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState("");
-  const [taskStatus, setTaskStatus] = useState("");
   const [imageEncoding, setImageEncoding] = useState("");
   const [fileName, setFileName] = useState("");
   const [requestEpoch, setRequestEpoch] = useState(-1);
@@ -19,13 +17,13 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
   const cancelRequestRef = useRef(false);
   const controller = new AbortController();
   const signal = controller.signal;
-  //console.log(serverURL)
 
   const refreshText = (e) => {
     setDesiredClass(e.target.value);
   };
 
   const handleImageChange = (e) => {
+    console.log(serverURL);
     const file = e.target.files[0];
     if (file) {
       setDisplayImage(URL.createObjectURL(file));
@@ -274,7 +272,7 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
             style={{ padding: "20px" }}
             className={buttonTypes.cancelButton}
           >
-            Cancel Request
+            Cancel
           </button>
         )}
       </div>

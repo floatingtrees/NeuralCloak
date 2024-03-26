@@ -15,7 +15,7 @@ def tanh(noise):
     ex_inv = torch.exp(-noise)
     return ((ex - ex_inv) / (ex + ex_inv))
 
-def parallel_attack(task, r, all_models, image, negative_text_list, positive_text_list, device, task_id, max_epochs = 100, similarity = 0.1, epsilon = 0.001, shift = 1):
+def parallel_attack(task, r, all_models, image, negative_text_list, positive_text_list, device, task_id, max_epochs = 100, similarity = 0.2, epsilon = 0.001, shift = 1):
     noise = torch.zeros(image.shape, dtype = torch.float32)
     noise.requires_grad = True
     optimizer = torch.optim.Adam(list([noise, ]), lr = 0.006, betas = (0.9, 0.999), maximize = False)
