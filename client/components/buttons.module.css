@@ -1,19 +1,29 @@
 .roundColorfulButton {
-  background-color: #4C7Fff; /* Green background */
-  color: white; /* White text */
-  padding: 15px 32px; /* Top and bottom padding, Left and right padding */
-  border: none; /* No border */
-  border-radius: 20px; /* Rounded corners */
-  cursor: pointer; /* Pointer/hand icon */
-  font-size: 16px; /* Larger text */
+    background-color: #4c7fff; /* Green background */
+    color: white; /* White text */
+    padding: 15px 32px; /* Top and bottom padding, Left and right padding */
+    border: none; /* No border */
+    border-radius: 20px; /* Rounded corners */
+    cursor: pointer; /* Pointer/hand icon */
+    font-size: 16px; /* Larger text */
 }
 
 .cancelButton {
-  background-color: #dd3333; /* Green background */
-  color: white; /* White text */
-  padding: 15px 32px; /* Top and bottom padding, Left and right padding */
-  border: none; /* No border */
-  border-radius: 20px; /* Rounded corners */
-  cursor: pointer; /* Pointer/hand icon */
-  font-size: 16px; /* Larger text */
+    background-color: #dd3333; /* Green background */
+    color: white; /* White text */
+    padding: 15px 32px; /* Top and bottom padding, Left and right padding */
+    border: none; /* No border */
+    border-radius: 20px; /* Rounded corners */
+    cursor: pointer; /* Pointer/hand icon */
+    font-size: 16px; /* Larger text */
+}
+
+.downloadButton {
+    background-color: #75a758; /* Green background */
+    color: white; /* White text */
+    padding: 15px 32px; /* Top and bottom padding, Left and right padding */
+    border: none; /* No border */
+    border-radius: 20px; /* Rounded corners */
+    cursor: pointer; /* Pointer/hand icon */
+    font-size: 16px; /* Larger text */
 }

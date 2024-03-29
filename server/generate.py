@@ -44,6 +44,17 @@ def convertToImage(tensor):
     image = np.transpose(image, (1, 2, 0))
     return Image.fromarray((image * 255).astype(np.uint8))
 
+def get_probs(model, image_features, text_list, device):
+    results = {}
+    for i, text in enumerate(text_list):
+        with torch.no_grad():
+            encoding = torch.cat([clip.tokenize(text)]).to(device)
+            features = model.encode_text(encoding)
+            text_features = features / features.norm(dim = -1)
+            similarity = image_features @ text_features.T
+        print(f"{text}: {round(float(similarity), 3)}")
+        results[text] = round(float(similarity), 5)
+    return results
 
 @app.task(name='parallelized_generate', bind=True)
 def parallelized_generate(self, image_data, negative_text_list, positive_text_list):
@@ -89,12 +100,26 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
 '''
 
 
-    # write to shared memory
-
     image = to_tensor(image).unsqueeze(0)
     image_input = image.clone().detach().to(device)
+
+    transformed = ViT_B32(image.clone().detach()).to(device)
+    model.to(device)
+    image_features = model.encode_image(transformed)
+    image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+
+    negative_prenorm = get_probs(model, image_features, negative_text_list, device)
+    positive_prenorm = get_probs(model, image_features, positive_text_list, device)
+
     task_id = self.request.id
+    # CONDUCT THE ATTACK
+    #
+    #
+    #
     image_output = attack.parallel_attack(self, r, all_models, image, negative, positive, device, task_id)
+    #
+    #
+    #
     if image_output == 'canceled':
         return "canceled"
     total_probs = {}
@@ -102,13 +127,11 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
     model.to(device)
     image_features = model.encode_image(transformed)
     image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-    for i, text in enumerate(negative_text_list + positive_text_list):
-        with torch.no_grad():
-            encoding = torch.cat([clip.tokenize(text)]).to(device)
-            features = model.encode_text(encoding)
-            text_features = features / features.norm(dim = -1)
-            similarity = image_features @ text_features.T
-        print(f"{text}: {round(float(similarity), 3)}")
+
+    # Recalculate after
+    negative_postnorm = get_probs(model, image_features, negative_text_list, device)
+    positive_postnorm = get_probs(model, image_features, positive_text_list, device)
+
 
     converted_image = convertToImage(image_output)
     buffer = BytesIO()
@@ -119,4 +142,4 @@ def parallelized_generate(self, image_data, negative_text_list, positive_text_li
     converted_image.save(buffer, format='PNG')
     encoded_string = base64.b64encode(buffer.getvalue()).decode()
 
-    return encoded_string
+    return encoded_string, negative_prenorm, positive_prenorm, negative_postnorm, positive_postnorm

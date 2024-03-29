@@ -43,12 +43,14 @@ app = FastAPI(lifespan=lifespan)
 
 origins = ["https://client-ey6altycha-wl.a.run.app",
             "https://neuralcloak.com",
-            "http://localhost:3000"]
+            "http://localhost:3000",
+            "*"]
 # Add CORSMiddleware to the application
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
+    expose_headers=["*"],
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
@@ -82,14 +84,25 @@ def get_task_status(task_id):
     elif task_result.state == 'PROGRESS':
         return {"message" : "progress", "iteration" : task_result.info["current"]}
     else:
-        converted_image = task_result.get()
+        # image, negative preprocessing probs, positive preprocessing probs, negative postprocessing probs
+        converted_image, negative_prenorm, positive_prenorm, negative_postnorm, positive_postnorm = task_result.get()
         torch.cuda.empty_cache()
-        return {"message" : "Finished", "iteration" : -1, "image" : converted_image}
+        decoded_image = base64.b64decode(converted_image)
+        img = Image.open(BytesIO(decoded_image))
+        img.save("Conversion.jpg")
 
+
+        return {"message" : "Finished", "iteration" : -1, "image" : converted_image,
+            "negative_prenorm" : negative_prenorm, "positive_prenorm" : positive_prenorm,
+            "negative_postnorm" : negative_postnorm, "positive_postnorm" : positive_postnorm}
+
+@app.get('/')
+def tests():
+    return {"message" : "hi"}
 
 @app.post('/api/upload')
 async def upload_file(data : UploadRequest):
-    if len(data.image) > 10000000: # reject lengths over 10 million
+    if len(data.image) > 10000000: # reject lengths over 10 million character encodings
         return {'message': "file too big"}
 
     image_data = data.image

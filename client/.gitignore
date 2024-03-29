@@ -5,6 +5,7 @@
 /.pnp
 .pnp.js
 
+
 # testing
 /coverage
 
@@ -30,3 +31,4 @@ yarn-error.log*
 !uploadImage.png
 !sharkDemo.png
 !sharkDemo2.png
+certificates
