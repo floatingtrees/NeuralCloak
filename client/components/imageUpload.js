@@ -3,15 +3,23 @@ import TextInput from "./text_box";
 import ProgressBar from "./ProgressBar";
 import ColorChangeButton from "./ButtonChange";
 import buttonTypes from "./buttons.module.css";
+import ProbsDisplay from "./ProbsDisplay";
 
 const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [displayImage, setDisplayImage] = useState(null);
   const [message, setMessage] = useState("");
-  const [imageEncoding, setImageEncoding] = useState("");
   const [fileName, setFileName] = useState("");
   const [requestEpoch, setRequestEpoch] = useState(-1);
   const [processingRequest, setProcessingRequest] = useState(false);
+  const [displayProbs, setDisplayProbs] = useState(false);
+  const [probs, setProbs] = useState([
+    { key1: 1, key2: 0.9 },
+    { key3: 1, key4: -1 },
+    { key1: 1, key2: 1 },
+    { key3: 1, key4: 1 },
+  ]);
+
   const serverURL = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const cancelRequestRef = useRef(false);
@@ -111,11 +119,16 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
             .then((response) => response.json())
             .then((data) => {
               if (data.iteration == -1) {
-                // set request epoch to -1 to bypass this
-                setDisplayImage(null);
                 setDisplayImage(`data:image/jpeg;base64,${data.image}`);
                 setRequestEpoch(-1);
                 setProcessingRequest(false);
+                setDisplayProbs(true);
+                setProbs([
+                  data.negative_prenorm,
+                  data.positive_prenorm,
+                  data.negative_postnorm,
+                  data.positive_postnorm,
+                ]);
                 clearInterval(intervalId);
               }
 
@@ -276,7 +289,16 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
           </button>
         )}
       </div>
-      {/*<ColorChangeButton type='button'base='yellow' change='green'> hiasdfhosauidf </ColorChangeButton>*/}
+      {!displayProbs ? (
+        <div />
+      ) : (
+        <ProbsDisplay
+          negative_prenorm={probs[0]}
+          positive_prenorm={probs[1]}
+          negative_postnorm={probs[2]}
+          positive_postnorm={probs[3]}
+        />
+      )}
     </form>
   );
 };

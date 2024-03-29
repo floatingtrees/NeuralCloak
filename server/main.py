@@ -84,7 +84,8 @@ def get_task_status(task_id):
     elif task_result.state == 'PROGRESS':
         return {"message" : "progress", "iteration" : task_result.info["current"]}
     else:
-        converted_image, negative_results, positive_results = task_result.get()
+        # image, negative preprocessing probs, positive preprocessing probs, negative postprocessing probs
+        converted_image, negative_prenorm, positive_prenorm, negative_postnorm, positive_postnorm = task_result.get()
         torch.cuda.empty_cache()
         decoded_image = base64.b64decode(converted_image)
         img = Image.open(BytesIO(decoded_image))
@@ -92,7 +93,8 @@ def get_task_status(task_id):
 
 
         return {"message" : "Finished", "iteration" : -1, "image" : converted_image,
-            "negative" : negative_results, "positive" : positive_results}
+            "negative_prenorm" : negative_prenorm, "positive_prenorm" : positive_prenorm,
+            "negative_postnorm" : negative_postnorm, "positive_postnorm" : positive_postnorm}
 
 @app.get('/')
 def tests():
