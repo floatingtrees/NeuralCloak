@@ -13,6 +13,7 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
   const [requestEpoch, setRequestEpoch] = useState(-1);
   const [processingRequest, setProcessingRequest] = useState(false);
   const [displayProbs, setDisplayProbs] = useState(false);
+  const markRef = useRef(null);
   const [probs, setProbs] = useState([
     { key1: 1, key2: 0.9 },
     { key3: 1, key4: -1 },
@@ -129,6 +130,11 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
                   data.negative_postnorm,
                   data.positive_postnorm,
                 ]);
+                //window.location.hash = "#mark";
+                markRef.current.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
                 clearInterval(intervalId);
               }
 
@@ -189,117 +195,123 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
   };
 
   return (
-    <form onSubmit={uploadImage}>
-      <div
-        style={{
-          margin: "30px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div style={{}}>
+    <div>
+      <form onSubmit={uploadImage}>
+        <div
+          style={{
+            margin: "30px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div style={{}}>
+            <input
+              type="file"
+              onChange={handleImageChange}
+              style={{ display: "none" }}
+              accept="image/png, image/jpeg, image/jpg"
+            />
+            <button type="button" onClick={imageClick}>
+              {" "}
+              Choose image{" "}
+            </button>
+          </div>
+        </div>
+
+        <div
+          style={{
+            margin: "20px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <input
             type="file"
+            id="fileInput"
+            style={{ display: "none" }} // Hide the file input
             onChange={handleImageChange}
-            style={{ display: "none" }}
             accept="image/png, image/jpeg, image/jpg"
           />
-          <button type="button" onClick={imageClick}>
-            {" "}
-            Choose image{" "}
-          </button>
+          {displayImage != null ? (
+            <img
+              src={displayImage}
+              alt="Condition Met"
+              style={{ pointerEvents: "all" }}
+              alt="Description"
+              onClick={imageClick}
+            />
+          ) : (
+            <img
+              src={"images/uploadImage.png"}
+              style={{ pointerEvents: "all" }}
+              alt="Click to Upload"
+              onClick={imageClick}
+            />
+          )}
         </div>
-      </div>
-
-      <div
-        style={{
-          margin: "20px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <input
-          type="file"
-          id="fileInput"
-          style={{ display: "none" }} // Hide the file input
-          onChange={handleImageChange}
-          accept="image/png, image/jpeg, image/jpg"
-        />
-        {displayImage != null ? (
-          <img
-            src={displayImage}
-            alt="Condition Met"
-            style={{ pointerEvents: "all" }}
-            alt="Description"
-            onClick={imageClick}
+        <div
+          style={{
+            marginLeft: "20%",
+            marginRight: "20%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {requestEpoch == -1 ? (
+            <div> </div>
+          ) : requestEpoch == 0 ? (
+            <div>Request in Queue (Estimated wait time: 8s) </div>
+          ) : (
+            <ProgressBar progress={requestEpoch} /> // This will render if requestEpoch is 0
+          )}
+        </div>
+        <div
+          style={{
+            margin: "20px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "20px",
+          }}
+        >
+          {!processingRequest ? (
+            <button
+              type="submit"
+              style={{ padding: "20px" }}
+              className={buttonTypes.roundColorfulButton}
+            >
+              Protect Art
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={cancelProcessing}
+              style={{ padding: "20px" }}
+              className={buttonTypes.cancelButton}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+      <div id="mark" ref={markRef}>
+        {!displayProbs ? (
+          <div />
+        ) : (
+          <ProbsDisplay
+            image={displayImage}
+            imageName={fileName}
+            negative_prenorm={probs[0]}
+            positive_prenorm={probs[1]}
+            negative_postnorm={probs[2]}
+            positive_postnorm={probs[3]}
           />
-        ) : (
-          <img
-            src={"images/uploadImage.png"}
-            style={{ pointerEvents: "all" }}
-            alt="Description"
-            onClick={imageClick}
-          />
         )}
       </div>
-      <div
-        style={{
-          marginLeft: "20%",
-          marginRight: "20%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        {requestEpoch == -1 ? (
-          <div> </div>
-        ) : requestEpoch == 0 ? (
-          <div>Request in Queue</div> // Assuming you want to render an empty div if requestEpoch isn't 0
-        ) : (
-          <ProgressBar progress={requestEpoch} /> // This will render if requestEpoch is 0
-        )}
-      </div>
-      <div
-        style={{
-          margin: "20px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "20px",
-        }}
-      >
-        {!processingRequest ? (
-          <button
-            type="submit"
-            style={{ padding: "20px" }}
-            className={buttonTypes.roundColorfulButton}
-          >
-            Protect Art
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={cancelProcessing}
-            style={{ padding: "20px" }}
-            className={buttonTypes.cancelButton}
-          >
-            Cancel
-          </button>
-        )}
-      </div>
-      {!displayProbs ? (
-        <div />
-      ) : (
-        <ProbsDisplay
-          negative_prenorm={probs[0]}
-          positive_prenorm={probs[1]}
-          negative_postnorm={probs[2]}
-          positive_postnorm={probs[3]}
-        />
-      )}
-    </form>
+    </div>
   );
 };
 
