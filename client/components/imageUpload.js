@@ -131,11 +131,14 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
                   data.negative_postnorm,
                   data.positive_postnorm,
                 ]);
+                setTimeout(() => {
+                  markRef.current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }, 100);
                 //window.location.hash = "#mark";
-                markRef.current.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+
                 clearInterval(intervalId);
               }
 
@@ -264,7 +267,7 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
           {requestEpoch == -1 ? (
             <div> </div>
           ) : requestEpoch == 0 ? (
-            <div>Request in Queue (Estimated wait time: 8s) </div>
+            <div>Request in Queue (Estimated queue time: 8s) </div>
           ) : (
             <ProgressBar progress={requestEpoch} /> // This will render if requestEpoch is 0
           )}
