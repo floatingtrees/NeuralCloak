@@ -26,7 +26,7 @@ const ProbsDisplay = ({
     const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = blobUrl;
-    link.download = "CLOAKED " + imageName;
+    link.download = "protected " + imageName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -8,6 +8,7 @@ import ProbsDisplay from "./ProbsDisplay";
 const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [displayImage, setDisplayImage] = useState(null);
+  const [protectedImage, setProtectedImage] = useState(null);
   const [message, setMessage] = useState("");
   const [fileName, setFileName] = useState("");
   const [requestEpoch, setRequestEpoch] = useState(-1);
@@ -120,7 +121,7 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
             .then((response) => response.json())
             .then((data) => {
               if (data.iteration == -1) {
-                setDisplayImage(`data:image/jpeg;base64,${data.image}`);
+                setProtectedImage(`data:image/jpeg;base64,${data.image}`);
                 setRequestEpoch(-1);
                 setProcessingRequest(false);
                 setDisplayProbs(true);
@@ -302,7 +303,7 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
           <div />
         ) : (
           <ProbsDisplay
-            image={displayImage}
+            image={protectedImage}
             imageName={fileName}
             negative_prenorm={probs[0]}
             positive_prenorm={probs[1]}
