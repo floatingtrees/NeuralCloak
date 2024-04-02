@@ -22,7 +22,7 @@ const ImageUploader = ({ positiveTextValues, negativeTextValues }) => {
     { key3: 1, key4: 1 },
   ]);
 
-  const serverURL = "localhost:8080";
+  const serverURL = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const cancelRequestRef = useRef(false);
   const controller = new AbortController();
